@@ -25,6 +25,7 @@ import { WiringStage } from './components/WiringStage';
 import { BattleStage } from './components/BattleStage';
 import { TrilingualText } from './components/Visuals';
 import { GameManual } from './components/GameManual';
+import { WelcomeScreen } from './components/WelcomeScreen';
 
 // --- Templates ---
 const INITIAL_TEAM: Omit<Team, 'id' | 'name'> = {
@@ -275,13 +276,14 @@ export default function App() {
 
   // --- Phase Handlers ---
 
-  const startGame = (mode: GameMode) => {
-      if (!name1 || !name2) return alert("Names required");
-      playGameSound('click');
+  const startGame = (mode: GameMode, n1: string, n2: string) => {
       setGameMode(mode);
+      setName1(n1);
+      setName2(n2);
+      
       const initTeams = [
-          { ...INITIAL_TEAM, id: 't1', name: name1, wins: 0 } as Team,
-          { ...INITIAL_TEAM, id: 't2', name: name2, wins: 0 } as Team
+          { ...INITIAL_TEAM, id: 't1', name: n1, wins: 0 } as Team,
+          { ...INITIAL_TEAM, id: 't2', name: n2, wins: 0 } as Team
       ];
       setTeams(initTeams);
       // START WITH COIN TOSS IMMEDIATELY
@@ -956,6 +958,18 @@ export default function App() {
     );
   };
 
+  // --- WELCOME SCREEN RENDER ---
+  // Replaces the internal SETUP phase UI
+  if (phase === GamePhase.SETUP) {
+      return (
+          <WelcomeScreen 
+              onStart={startGame} 
+              language={language}
+              setLanguage={setLanguage}
+          />
+      );
+  }
+
   return (
     <div className={`min-h-screen text-gray-100 p-4 font-sans w-full overflow-hidden select-none flex flex-col transition-colors duration-700 ${bgClass}`}>
         {showManual && <GameManual onClose={() => setShowManual(false)} />}
@@ -1061,39 +1075,6 @@ export default function App() {
                      </span>
                      <span className="text-2xl font-black text-white font-display">{activeTeamName}</span>
                  </div>
-             )}
-
-             {/* Setup Phase */}
-             {phase === GamePhase.SETUP && (
-                <div className="w-full max-w-4xl bg-gray-800/50 border border-gray-700 p-12 rounded-[2.5rem] text-center shadow-2xl mt-8 flex-shrink-0">
-                    <Zap size={80} className="mx-auto text-neon-blue mb-8 animate-pulse" />
-                    <h1 className="text-6xl font-black mb-10 text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple font-display">VOLTAGE WARS</h1>
-                    
-                    <div className="space-y-6 max-w-2xl mx-auto">
-                        <input className="w-full bg-black/40 p-6 rounded-xl border-2 border-gray-600 text-white text-2xl focus:border-neon-blue outline-none text-center" placeholder={language === 'zh' ? "隊伍 A 名稱" : language === 'ja' ? "チームAの名前" : "Team Alpha Name"} value={name1} onChange={e => setName1(e.target.value)} />
-                        <input className="w-full bg-black/40 p-6 rounded-xl border-2 border-gray-600 text-white text-2xl focus:border-neon-purple outline-none text-center" placeholder={language === 'zh' ? "隊伍 B 名稱" : language === 'ja' ? "チームBの名前" : "Team Beta Name"} value={name2} onChange={e => setName2(e.target.value)} />
-                        
-                        <div className="grid grid-cols-2 gap-6 mt-8">
-                            <button 
-                                onClick={() => startGame(GameMode.PRACTICE)} 
-                                className="group bg-gray-900 hover:bg-green-900/30 border-2 border-gray-700 hover:border-green-500 rounded-2xl p-6 transition-all"
-                            >
-                                <GraduationCap size={40} className="text-green-500 mx-auto mb-2" />
-                                <div className="text-xl font-bold text-white"><TrilingualText content={{zh: "訓練模式", en: "TRAINING", ja: "トレーニング"}} language={language} /></div>
-                                <div className="text-green-400 text-sm"><TrilingualText content={{zh: "包含手冊與日誌", en: "Manual & Logs", ja: "マニュアルとログ"}} language={language} /></div>
-                            </button>
-
-                            <button 
-                                onClick={() => startGame(GameMode.COMPETITIVE)} 
-                                className="group bg-gray-900 hover:bg-purple-900/30 border-2 border-gray-700 hover:border-neon-purple rounded-2xl p-6 transition-all"
-                            >
-                                <Swords size={40} className="text-neon-purple mx-auto mb-2" />
-                                <div className="text-xl font-bold text-white"><TrilingualText content={{zh: "排名模式", en: "RANKED", ja: "ランク戦"}} language={language} /></div>
-                                <div className="text-neon-purple text-sm"><TrilingualText content={{zh: "三戰兩勝制", en: "Best of 3", ja: "3本勝負"}} language={language} /></div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
              )}
 
              {/* Stages */}
